@@ -54,6 +54,7 @@
     </dependencyManagement>
     <modules>
         <module>domain</module>
+        <module>shell</module>
         <module>logger</module>
         <module>console</module>
         <module>contract</module>

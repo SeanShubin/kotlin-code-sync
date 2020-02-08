@@ -7,6 +7,9 @@ import com.seanshubin.code.sync.domain.*
 import com.seanshubin.code.sync.logger.LogGroup
 import com.seanshubin.code.sync.logger.Logger
 import com.seanshubin.code.sync.logger.LoggerFactory
+import com.seanshubin.code.sync.shell.ProcessBuilderShell
+import com.seanshubin.code.sync.shell.Shell
+import com.seanshubin.code.sync.shell.ShellCommand
 import java.net.http.HttpClient
 import java.nio.file.Path
 
@@ -21,10 +24,11 @@ class DependencyInjectionConfiguration(configuration: Configuration) {
   private val githubUserName: String = configuration.githubUserName.value
   private val githubProjectDataTransfer: GithubProjectDataTransfer = GithubProjectDataTransferImpl(objectMapper)
   private val githubProjectFinder: GithubProjectFinder = GithubProjectFinderImpl(http, githubUserName, githubProjectDataTransfer)
-  private val commandEvent: (String) -> Unit = notifications::consoleCommand
+  private val execEvent: (ShellCommand) -> Unit = notifications::shellCommand
   private val files: FilesContract = FilesDelegate
   private val localGithubPath: Path = configuration.localGithubPath.value
   private val localProjectFinder: LocalProjectFinder = LocalProjectFinderImpl(localGithubPath, files)
-  private val commandGenerator: CommandGenerator = CommandGeneratorImpl(githubUserName)
-  val runner: Runnable = Runner(githubProjectFinder, localProjectFinder, commandGenerator, commandEvent)
+  private val commandGenerator: CommandGenerator = CommandGeneratorImpl(localGithubPath, githubUserName)
+  private val shell: Shell = ProcessBuilderShell(execEvent)
+  val runner: Runnable = Runner(githubProjectFinder, localProjectFinder, commandGenerator, shell)
 }

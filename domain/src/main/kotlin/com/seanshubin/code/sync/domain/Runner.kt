@@ -1,9 +1,12 @@
 package com.seanshubin.code.sync.domain
 
+import com.seanshubin.code.sync.shell.Shell
+
+
 class Runner(private val githubProjectFinder: GithubProjectFinder,
              private val localProjectFinder: LocalProjectFinder,
              private val commandGenerator: CommandGenerator,
-             private val commandEvent: (String) -> Unit) : Runnable {
+             private val shell: Shell) : Runnable {
   override fun run() {
     val remote = githubProjectFinder.findAll()
     val local = localProjectFinder.findAll();
@@ -12,6 +15,6 @@ class Runner(private val githubProjectFinder: GithubProjectFinder,
     val downloadCommands = missing.flatMap(commandGenerator::cloneFromGithubToLocal)
     val uploadCommands = extra.flatMap(commandGenerator::addLocalToGithub)
     val commands = downloadCommands + uploadCommands
-    commands.forEach(commandEvent)
+    commands.forEach(shell::exec)
   }
 }

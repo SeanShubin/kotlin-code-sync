@@ -40,7 +40,8 @@
   }
   global [ stdlib test ]
   modules {
-    domain        [ coroutines jackson logger contract ]
+    domain        [ coroutines jackson logger contract shell ]
+    shell         []
     logger        [ contract ]
     console       [ domain ]
     contract      []
