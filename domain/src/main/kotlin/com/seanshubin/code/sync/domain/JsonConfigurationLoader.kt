@@ -7,7 +7,7 @@ import java.nio.file.Paths
 class JsonConfigurationLoader(private val files: FilesContract,
                               private val configurationDataTransfer: ConfigurationDataTransfer) : ConfigurationLoader {
   override fun fromArguments(args: Array<String>): Configuration {
-    val configFileName = args[0]
+    val configFileName = args.getOrNull(0) ?: "local-config/code-sync-config.json"
     return fromFileNamed(configFileName, Configuration.default)
   }
 

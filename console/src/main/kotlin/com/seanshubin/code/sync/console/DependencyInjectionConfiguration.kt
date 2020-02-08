@@ -9,16 +9,16 @@ import java.net.http.HttpClient
 import java.nio.file.Path
 
 class DependencyInjectionConfiguration(configuration: Configuration) {
-  val objectMapper: ObjectMapper = JsonUtil.objectMapper
-  val logDir: Path = configuration.logDir.value
-  val logGroup: LogGroup = LoggerFactory.instanceDefaultZone.createLogGroup(logDir)
-  val notificationsLogger: Logger = logGroup.create("notifications")
-  val notifications:Notifications = LoggingNotifications(notificationsLogger)
-  val httpClient:HttpClient = HttpClient.newBuilder().build()
-  val http:Http = JavaHttp(httpClient, notifications::httpRequest)
-  val userName:String = configuration.githubName.value
-  val githubProjectDataTransfer:GithubProjectDataTransfer = GithubProjectDataTransferImpl(objectMapper)
-  val githubProjectFinder: GithubProjectFinder = GithubProjectFinderImpl(http, userName, githubProjectDataTransfer)
-  val githubProjectEvent: (GithubProject) -> Unit = notifications::githubProject
+  private val objectMapper: ObjectMapper = JsonUtil.objectMapper
+  private val logDir: Path = configuration.logDir.value
+  private val logGroup: LogGroup = LoggerFactory.instanceDefaultZone.createLogGroup(logDir)
+  private val notificationsLogger: Logger = logGroup.create("notifications")
+  private val notifications:Notifications = LoggingNotifications(notificationsLogger)
+  private val httpClient:HttpClient = HttpClient.newBuilder().build()
+  private val http:Http = JavaHttp(httpClient, notifications::httpRequest)
+  private val userName:String = configuration.githubName.value
+  private val githubProjectDataTransfer:GithubProjectDataTransfer = GithubProjectDataTransferImpl(objectMapper)
+  private val githubProjectFinder: GithubProjectFinder = GithubProjectFinderImpl(http, userName, githubProjectDataTransfer)
+  private val githubProjectEvent: (GithubProject) -> Unit = notifications::githubProject
   val runner:Runnable = Runner(githubProjectFinder, githubProjectEvent)
 }

@@ -5,7 +5,7 @@ import java.net.http.HttpRequest
 
 class LoggingNotifications(private val logger: Logger) :Notifications{
   override fun githubProject(githubProject: GithubProject) {
-    logger.log(githubProject.toString())
+    logger.log(githubProject.name)
   }
 
   override fun httpRequest(request: HttpRequest) {
