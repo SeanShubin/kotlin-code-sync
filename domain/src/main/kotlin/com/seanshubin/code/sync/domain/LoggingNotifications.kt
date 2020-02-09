@@ -15,4 +15,12 @@ class LoggingNotifications(private val logger: Logger) :Notifications {
   override fun httpRequest(request: HttpRequest) {
     logger.log("${request.method()} ${request.uri()}")
   }
+
+  override fun outputLineEvent(line: String) {
+    logger.log("OUT: $line")
+  }
+
+  override fun errorLineEvent(line: String) {
+    logger.log("ERR:  $line")
+  }
 }

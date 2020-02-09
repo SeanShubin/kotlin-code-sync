@@ -11,6 +11,8 @@ import com.seanshubin.code.sync.shell.ProcessBuilderShell
 import com.seanshubin.code.sync.shell.Shell
 import com.seanshubin.code.sync.shell.ShellCommand
 import java.net.http.HttpClient
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
 class DependencyInjectionConfiguration(configuration: Configuration) {
@@ -27,8 +29,12 @@ class DependencyInjectionConfiguration(configuration: Configuration) {
   private val execEvent: (ShellCommand) -> Unit = notifications::shellCommand
   private val files: FilesContract = FilesDelegate
   private val localGithubPath: Path = configuration.localGithubPath.value
-  private val localProjectFinder: LocalProjectFinder = LocalProjectFinderImpl(localGithubPath, files)
+  private val ignored: List<String> = configuration.ignoreLocalDirNames.value
+  private val localProjectFinder: LocalProjectFinder = LocalProjectFinderImpl(localGithubPath, files, ignored)
   private val commandGenerator: CommandGenerator = CommandGeneratorImpl(localGithubPath, githubUserName)
-  private val shell: Shell = ProcessBuilderShell(execEvent)
+  private val charset: Charset = StandardCharsets.UTF_8
+  private val outputLineEvent: (String) -> Unit = notifications::outputLineEvent
+  private val errorLineEvent: (String) -> Unit = notifications::errorLineEvent
+  private val shell: Shell = ProcessBuilderShell(charset, execEvent, outputLineEvent, errorLineEvent)
   val runner: Runnable = Runner(githubProjectFinder, localProjectFinder, commandGenerator, shell)
 }
