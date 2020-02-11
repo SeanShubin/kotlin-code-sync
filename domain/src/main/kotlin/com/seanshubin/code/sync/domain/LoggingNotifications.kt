@@ -13,14 +13,20 @@ class LoggingNotifications(private val logger: Logger) :Notifications {
   }
 
   override fun httpRequest(request: HttpRequest) {
-    logger.log("${request.method()} ${request.uri()}")
+      logger.log("${request.method()} ${request.uri()}")
   }
 
-  override fun outputLineEvent(line: String) {
-    logger.log("OUT: $line")
-  }
+    override fun outputLineEvent(line: String) {
+        logger.log("OUT: $line")
+    }
 
-  override fun errorLineEvent(line: String) {
-    logger.log("ERR:  $line")
-  }
+    override fun errorLineEvent(line: String) {
+        logger.log("ERR:  $line")
+    }
+
+    override fun projectSyncedEvent(projectAndStatus: ProjectAndStatus) {
+        val name = projectAndStatus.project.name
+        val status = projectAndStatus.status
+        logger.log("$name -> $status")
+    }
 }
