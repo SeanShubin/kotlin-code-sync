@@ -36,7 +36,7 @@ class DependencyInjectionConfiguration(configuration: Configuration) {
   private val outputLineEvent: (String) -> Unit = notifications::outputLineEvent
   private val errorLineEvent: (String) -> Unit = notifications::errorLineEvent
   private val shell: Shell = ProcessBuilderShell(charset, execEvent, outputLineEvent, errorLineEvent)
-  private val projectFactory: ProjectFactory = ProjectFactoryImpl()
+  private val projectFactory: ProjectFactory = ProjectFactoryImpl(shell, localGithubPath)
   private val projectSyncedEvent: (ProjectAndStatus) -> Unit = notifications::projectSyncedEvent
   val runner: Runnable = Runner(githubProjectFinder, localProjectFinder, commandGenerator, shell, projectFactory, projectSyncedEvent)
 }

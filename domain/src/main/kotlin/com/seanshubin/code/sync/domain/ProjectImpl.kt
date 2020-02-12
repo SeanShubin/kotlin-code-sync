@@ -1,5 +1,7 @@
 package com.seanshubin.code.sync.domain
 
+import kotlinx.coroutines.CoroutineDispatcher
+
 class ProjectImpl(override val name: String,
                   private val projectApi: ProjectApi) : Project {
     override fun existsInGitlab(): Boolean {
@@ -10,8 +12,8 @@ class ProjectImpl(override val name: String,
         return projectApi.existsLocally(name)
     }
 
-    override fun hasPendingEdits(): Boolean {
-        return projectApi.hasPendingEdits(name)
+    override fun hasPendingEdits(coroutineDispatcher: CoroutineDispatcher): Boolean {
+        return projectApi.hasPendingEdits(name, coroutineDispatcher)
     }
 
     override fun hasRemoteCommits(): Boolean {

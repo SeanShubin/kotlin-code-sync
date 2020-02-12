@@ -18,6 +18,9 @@ class JsonConfigurationLoader(private val files: FilesContract,
 
   private fun fromPath(path: Path, default: Configuration): Configuration {
     if(!files.exists(path)){
+      if (!files.exists(path.parent)) {
+        files.createDirectories(path.parent)
+      }
       files.newOutputStream(path).use {
         configurationDataTransfer.toOutputStream(default, it)
       }
