@@ -7,10 +7,13 @@ import java.util.concurrent.Executors
 class RunWithConfiguration(private val createRunner: (Configuration, CoroutineDispatcher) -> Runnable,
                            private val configuration: Configuration) : Runnable {
   override fun run() {
-    val threadPool = Executors.newCachedThreadPool()
-    val coroutineDispatcher: CoroutineDispatcher = threadPool.asCoroutineDispatcher()
-    val runner = createRunner(configuration, coroutineDispatcher)
-    runner.run()
-    threadPool.shutdown()
+      val threadPool = Executors.newCachedThreadPool()
+      try {
+          val coroutineDispatcher: CoroutineDispatcher = threadPool.asCoroutineDispatcher()
+          val runner = createRunner(configuration, coroutineDispatcher)
+          runner.run()
+      } finally {
+          threadPool.shutdown()
+      }
   }
 }

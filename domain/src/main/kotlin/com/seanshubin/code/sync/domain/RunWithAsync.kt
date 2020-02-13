@@ -24,14 +24,40 @@ class RunWithAsync(private val githubProjectFinder: GithubProjectFinder,
             { name: String -> projectSyncedEvent(name, status) }
 
     private fun statusEvent(projectName: String) {
-        val directory = localGithubDirectory.resolve(projectName)
-        val command = listOf("git", "status", "-s")
-        val shellCommand = ShellCommand(directory, command)
-        val result = shell.execWithResult(shellCommand)
-        if (result.outputLines.isEmpty()) {
-            projectSyncedEvent(projectName, ProjectStatus.IN_SYNC)
+        val pending = hasPendingEdits(projectName)
+        val local = hasLocalCommits(projectName)
+        val remote = hasRemoteCommits(projectName)
+        if (pending || local || remote) {
+            if (pending) {
+                projectSyncedEvent(projectName, ProjectStatus.PENDING_EDITS)
+            }
+            if (local) {
+                projectSyncedEvent(projectName, ProjectStatus.LOCAL_COMMITS)
+            }
+            if (remote) {
+                projectSyncedEvent(projectName, ProjectStatus.REMOTE_COMMITS)
+            }
         } else {
-            projectSyncedEvent(projectName, ProjectStatus.PENDING_EDITS)
+            projectSyncedEvent(projectName, ProjectStatus.IN_SYNC)
         }
+    }
+
+    private fun hasPendingEdits(projectName: String): Boolean {
+        return resultNonEmpty(projectName, "git", "status", "-s")
+    }
+
+    private fun hasLocalCommits(projectName: String): Boolean {
+        return resultNonEmpty(projectName, "git", "log", "--oneline", "@{u}..")
+    }
+
+    private fun hasRemoteCommits(projectName: String): Boolean {
+        return resultNonEmpty(projectName, "git", "log", "--oneline", "..@{u}")
+    }
+
+    private fun resultNonEmpty(projectName: String, vararg command: String): Boolean {
+        val directory = localGithubDirectory.resolve(projectName)
+        val shellCommand = ShellCommand(directory, command.toList())
+        val result = shell.execWithResult(shellCommand)
+        return result.outputLines.isNotEmpty()
     }
 }
