@@ -2,7 +2,6 @@ package com.seanshubin.code.sync.domain
 
 import com.seanshubin.code.sync.shell.Shell
 import com.seanshubin.code.sync.shell.ShellCommand
-import kotlinx.coroutines.CoroutineDispatcher
 import java.nio.file.Path
 
 class ProjectApiImpl(private val shell: Shell,
@@ -17,10 +16,10 @@ class ProjectApiImpl(private val shell: Shell,
     return local.contains(name)
   }
 
-  override fun hasPendingEdits(name: String, coroutineDispatcher: CoroutineDispatcher): Boolean {
+  override fun hasPendingEdits(name: String): Boolean {
     val command = listOf("git", "status", "-s")
     val shellCommand = ShellCommand(localBasePath, command)
-    val result = shell.execWithResult(shellCommand, coroutineDispatcher)
+    val result = shell.execWithResult(shellCommand)
     return result.outputLines.size > 0
   }
 }

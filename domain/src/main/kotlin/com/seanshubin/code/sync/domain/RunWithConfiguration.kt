@@ -1,6 +1,16 @@
 package com.seanshubin.code.sync.domain
 
-class RunWithConfiguration : (Configuration) -> Unit {
-  override fun invoke(configuration: Configuration) {
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.asCoroutineDispatcher
+import java.util.concurrent.Executors
+
+class RunWithConfiguration(private val createRunner: (Configuration, CoroutineDispatcher) -> Runnable,
+                           private val configuration: Configuration) : Runnable {
+  override fun run() {
+    val threadPool = Executors.newCachedThreadPool()
+    val coroutineDispatcher: CoroutineDispatcher = threadPool.asCoroutineDispatcher()
+    val runner = createRunner(configuration, coroutineDispatcher)
+    runner.run()
+    threadPool.shutdown()
   }
 }

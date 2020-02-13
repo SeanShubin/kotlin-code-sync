@@ -5,13 +5,12 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.Executors
 
-
-class Runner(private val githubProjectFinder: GithubProjectFinder,
-             private val localProjectFinder: LocalProjectFinder,
-             private val commandGenerator: CommandGenerator,
-             private val shell: Shell,
-             private val projectFactory: ProjectFactory,
-             private val projectSyncedEvent: (ProjectAndStatus) -> Unit) : Runnable {
+class RunWithAsync(private val githubProjectFinder: GithubProjectFinder,
+                   private val localProjectFinder: LocalProjectFinder,
+                   private val commandGenerator: CommandGenerator,
+                   private val shell: Shell,
+                   private val projectFactory: ProjectFactory,
+                   private val projectSyncedEvent: (ProjectAndStatus) -> Unit) : Runnable {
   override fun run() {
     val threadPool = Executors.newCachedThreadPool()
     val coroutineDispatcher: CoroutineDispatcher = threadPool.asCoroutineDispatcher()
@@ -20,14 +19,14 @@ class Runner(private val githubProjectFinder: GithubProjectFinder,
     val loadProject = createLoadProjectFunction(local, remote)
     val projectNames = (remote + local).sorted().distinct()
     val projects = projectNames.map(loadProject)
-    val synced = projects.map { syncProject(it, coroutineDispatcher) }
+    val synced = projects.map(::syncProject)
     synced.forEach(projectSyncedEvent)
 //    val missing = remote - local
 //    val extra = local - remote
 //    val downloadCommands = missing.flatMap(commandGenerator::cloneFromGithubToLocal)
 //    val uploadCommands = extra.flatMap(commandGenerator::addLocalToGithub)
 //    val commands = downloadCommands + uploadCommands
-//    commands.forEach { shell.exec(it, coroutineDispatcher) }
+//    commands.forEach { shell.exec(it) }
     threadPool.shutdown()
   }
 
@@ -38,13 +37,13 @@ class Runner(private val githubProjectFinder: GithubProjectFinder,
     return ::loadProjectFunction
   }
 
-  private fun syncProject(project: Project, coroutineDispatcher: CoroutineDispatcher): ProjectAndStatus {
+  private fun syncProject(project: Project): ProjectAndStatus {
     if (!project.existsInGitlab()) {
       return ProjectAndStatus(project, ProjectStatus.NEED_TO_CREATE_IN_GITHUB)
     } else if (!project.existsLocally()) {
       project.clone()
       return ProjectAndStatus(project, ProjectStatus.IN_SYNC)
-    } else if (project.hasPendingEdits(coroutineDispatcher)) {
+    } else if (project.hasPendingEdits()) {
       return ProjectAndStatus(project, ProjectStatus.NEED_TO_COMMIT_PENDING_EDITS)
     } else {
       project.fetch()
