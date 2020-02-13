@@ -34,18 +34,18 @@ class ProcessBuilderShell(private val coroutineDispatcher: CoroutineDispatcher,
         processBuilder.command(command)
         processBuilder.directory(directory.toFile())
         val process = processBuilder.start()
-        val outputLineConsumer = LineConsumer()
-        val errorLineConsumer = LineConsumer()
+        val outputLineConsumer = LineConsumer(outputLineEvent)
+        val errorLineConsumer = LineConsumer(errorLineEvent)
         val outputJob = GlobalScope.launch(coroutineDispatcher) {
             IoUtil.inputStreamToLineEvent(process.inputStream, charset, outputLineConsumer)
-    }
-    val errorJob = GlobalScope.launch(coroutineDispatcher) {
-      IoUtil.inputStreamToLineEvent(process.errorStream, charset, errorLineConsumer)
-    }
-    runBlocking {
-      outputJob.join()
-      errorJob.join()
-    }
+        }
+        val errorJob = GlobalScope.launch(coroutineDispatcher) {
+            IoUtil.inputStreamToLineEvent(process.errorStream, charset, errorLineConsumer)
+        }
+        runBlocking {
+            outputJob.join()
+            errorJob.join()
+        }
     val exitCode = process.waitFor()
     return ShellResult(exitCode, outputLineConsumer.lines, errorLineConsumer.lines)
   }

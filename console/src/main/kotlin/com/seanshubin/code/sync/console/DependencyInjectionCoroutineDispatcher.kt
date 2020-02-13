@@ -5,7 +5,6 @@ import com.seanshubin.code.sync.contract.FilesContract
 import com.seanshubin.code.sync.contract.FilesDelegate
 import com.seanshubin.code.sync.domain.*
 import com.seanshubin.code.sync.logger.LogGroup
-import com.seanshubin.code.sync.logger.Logger
 import com.seanshubin.code.sync.logger.LoggerFactory
 import com.seanshubin.code.sync.shell.ProcessBuilderShell
 import com.seanshubin.code.sync.shell.Shell
@@ -20,8 +19,7 @@ class DependencyInjectionCoroutineDispatcher(configuration: Configuration, corou
     private val objectMapper: ObjectMapper = JsonUtil.objectMapper
     private val logDir: Path = configuration.logDir.value
     private val logGroup: LogGroup = LoggerFactory.instanceDefaultZone.createLogGroup(logDir)
-    private val notificationsLogger: Logger = logGroup.create("notifications")
-    private val notifications: Notifications = LoggingNotifications(notificationsLogger)
+    private val notifications: Notifications = LoggingNotifications(logGroup)
     private val httpClient: HttpClient = HttpClient.newBuilder().build()
     private val http: Http = JavaHttp(httpClient, notifications::httpRequest)
     private val githubUserName: String = configuration.githubUserName.value
@@ -29,15 +27,18 @@ class DependencyInjectionCoroutineDispatcher(configuration: Configuration, corou
     private val githubProjectFinder: GithubProjectFinder = GithubProjectFinderImpl(http, githubUserName, githubProjectDataTransfer)
     private val execEvent: (ShellCommand) -> Unit = notifications::shellCommand
     private val files: FilesContract = FilesDelegate
-    private val localGithubPath: Path = configuration.localGithubPath.value
+    private val localGithubDirectory: Path = configuration.localGithubDirectory.value
     private val ignored: List<String> = configuration.ignoreLocalDirNames.value
-    private val localProjectFinder: LocalProjectFinder = LocalProjectFinderImpl(localGithubPath, files, ignored)
-    private val commandGenerator: CommandGenerator = CommandGeneratorImpl(localGithubPath, githubUserName)
+    private val localProjectFinder: LocalProjectFinder = LocalProjectFinderImpl(localGithubDirectory, files, ignored)
     private val charset: Charset = StandardCharsets.UTF_8
     private val outputLineEvent: (String) -> Unit = notifications::outputLineEvent
     private val errorLineEvent: (String) -> Unit = notifications::errorLineEvent
     private val shell: Shell = ProcessBuilderShell(coroutineDispatcher, charset, execEvent, outputLineEvent, errorLineEvent)
-    private val projectFactory: ProjectFactory = ProjectFactoryImpl(shell, localGithubPath)
-    private val projectSyncedEvent: (ProjectAndStatus) -> Unit = notifications::projectSyncedEvent
-    val runner: Runnable = RunWithAsync(githubProjectFinder, localProjectFinder, commandGenerator, shell, projectFactory, projectSyncedEvent)
+    private val projectSyncedEvent: (String, ProjectStatus) -> Unit = notifications::projectSyncedEvent
+    val runner: Runnable = RunWithAsync(
+            githubProjectFinder,
+            localProjectFinder,
+            localGithubDirectory,
+            shell,
+            projectSyncedEvent)
 }

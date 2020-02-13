@@ -8,5 +8,5 @@ interface Notifications {
     fun shellCommand(shellCommand: ShellCommand)
     fun outputLineEvent(line: String)
     fun errorLineEvent(line: String)
-    fun projectSyncedEvent(projectAndStatus: ProjectAndStatus)
+    fun projectSyncedEvent(name: String, status: ProjectStatus)
 }
